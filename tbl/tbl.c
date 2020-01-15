@@ -88,9 +88,13 @@ void presentJson(FILE *file) {
 // main function.
 // here we open a hard coded file and then present it as json.
 int main(int argc, char *argv[]) {
-    FILE *file = fopen("example.tablatal.txt", "r");
+    FILE * file;
+    if (argc == 1)
+        file = fopen("example.tablatal.txt", "r");
+    else
+        file = fopen(argv[1], "r");
     if (!file) {
-        printf("EOPEN example.tablatal.txt\n");
+        printf("EOPEN\n");
         return 1;
     }
     presentJson(file);
