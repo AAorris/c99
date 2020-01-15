@@ -4,8 +4,8 @@
 #include <stdlib.h>
 #include <string.h>
 
-// manually insert header components here.
-// white space is important. Later, this can be parsed out.
+// manually insert header components here. White space is important.
+// FIXME: Can't figure out an elegant way to create this from the header line.
 char* HEADER[] = {
     "title                  ",
     "summary                                       ",
@@ -17,7 +17,7 @@ int COLUMNS = 5;
 
 // while we make you provide the number of columns,
 // we'll calculate how long the line is in total.
-// later, we should get this from the header line.
+// FIXME: Without a static header, we won't have a known line size.
 int calculateLineLength() {
     int ret = 0;
     for (int i=0; i<COLUMNS; i++) {
