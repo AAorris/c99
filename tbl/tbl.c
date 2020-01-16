@@ -59,7 +59,7 @@ int tbtlen(char* string, int size) {
 }
 
 // given an open file, dump json to stdout
-// usage example: ./tbl | jq '.[] | .title'
+// usage example: ./tbl table.txt | jq '.[] | .title'
 void presentJson(FILE *file) {
     char* line = (char*) malloc(sizeof(char) * LINESIZE);
     size_t columnSpace; // available space for current column
@@ -84,9 +84,13 @@ void presentJson(FILE *file) {
         started = 1;
         printf("}");
     }
-    printf("]");
+    printf("]\n");
     free(line);
     free(starts);
+    for (int i = 0; i < COLUMNS; i++) {
+        free(header[i]);
+    }
+    free(header);
 }
 
 // main function.

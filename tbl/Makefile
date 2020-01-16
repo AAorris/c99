@@ -1,3 +1,3 @@
 start:
-	gcc -g -Wall tbl.c -o tbl
+	gcc -Wall tbl.c -o tbl
 	./tbl
