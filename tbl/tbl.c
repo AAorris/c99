@@ -4,41 +4,44 @@
 #include <stdlib.h>
 #include <string.h>
 
-// manually insert header components here. White space is important.
-// FIXME: Can't figure out an elegant way to create this from the header line.
-char* HEADER[] = {
-    "title                  ",
-    "summary                                       ",
-    "tags            ",
-    "month     ",
-    "url                                                                                                                     "
-};
 int COLUMNS = 5;
-
-// while we make you provide the number of columns,
-// we'll calculate how long the line is in total.
-// FIXME: Without a static header, we won't have a known line size.
-int calculateLineLength() {
-    int ret = 0;
-    for (int i=0; i<COLUMNS; i++) {
-        ret += strlen(HEADER[i]);
-    }
-    return ret;
-}
+int LINESIZE = 512;  // max size
 
 // allocate the offset from beginning of a line to
 // the beginning of the column. We'll be printing
 // substrings of the line read from the file w/o
 // allocating any new memory (besides pointers here)
-int* allocateColumnStarts() {
-    int* ret = (int*) malloc(sizeof(int) * (COLUMNS + 1));
+int* allocateColumnStarts(char** header, int columns) {
+    int* ret = (int*) malloc(sizeof(int) * columns);
     int acc = 0;
-    for (int i=0; i<COLUMNS + 1; i++) {
+    for (int i=0; i<columns; i++) {
         ret[i] = acc;
-        if (i != COLUMNS)
-            acc += strlen(HEADER[i]);
+        if (i != columns)
+            acc += strlen(header[i]);
     }
     return ret;
+}
+
+char** parseHeader(char* line, int columns) {
+    // header(3):
+    // first                 [ s]econd[ t]hird
+    // ^----------------------^
+    //                         ^-------^
+    //                                  ^----^
+    char** header = (char**) malloc(sizeof(char*) * columns);
+    int column = 0;
+    int start = 0;
+    int end = 1;
+    while (column < columns) {
+        if (line[end] != ' ' && line[end - 1] == ' ') {  // [ x]
+            header[column] = (char*) malloc(sizeof(char) * ((end - start) + 1));
+            strncpy(header[column], line + start, end - start); // x---x
+            start = end;
+            column += 1;
+        }
+        end += 1;
+    }
+    return header;
 }
 
 // tbtlen is like strlen but it will ignore trailing spaces
@@ -58,23 +61,24 @@ int tbtlen(char* string, int size) {
 // given an open file, dump json to stdout
 // usage example: ./tbl | jq '.[] | .title'
 void presentJson(FILE *file) {
-    int lineSize = calculateLineLength();
-    char* line = (char*) malloc(sizeof(char) * lineSize);
-    int* starts = allocateColumnStarts();
+    char* line = (char*) malloc(sizeof(char) * LINESIZE);
     size_t columnSpace; // available space for current column
     int started = 0;
-    fgets(line, lineSize, file); //
-    fgets(line, lineSize, file); // skip header 
+    fgets(line, LINESIZE, file);
+    char** header = parseHeader(line, COLUMNS);
+    int* starts = allocateColumnStarts(header, COLUMNS);
     printf("[");
-    while (fgets(line, lineSize, file)) {
+    while (fgets(line, LINESIZE, file)) {
         if (started)
             printf(",\n");
         printf("{");
         for(int i=0; i<COLUMNS; i++) {
             char* column = line + starts[i];
-            columnSpace = strlen(HEADER[i]) - 1;
+            char* headerColumn = header[i];
+            // FIXME: move these calculations out of the loops
+            columnSpace = strlen(headerColumn) - 1;
             if (i > 0) printf(",");
-            printf("\"%.*s\":", tbtlen(HEADER[i], columnSpace), HEADER[i]);
+            printf("\"%.*s\":", tbtlen(headerColumn, columnSpace), headerColumn);
             printf("\"%.*s\"", tbtlen(column, columnSpace), column);
         }
         started = 1;
