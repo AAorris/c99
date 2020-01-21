@@ -58,6 +58,40 @@ int tbtlen(char* string, int size) {
     return lastChar + 1;
 }
 
+void presentHtml(FILE *file) {
+	char* line = (char*) malloc(sizeof(char) * LINESIZE);
+	size_t columnSpace;
+	int started = 0;
+	fgets(line, LINESIZE, file);
+	char** header = parseHeader(line, COLUMNS);
+	int* starts = allocateColumnStarts(header, COLUMNS);
+	printf("<thead>");
+	for (int i=0; i<COLUMNS; i++) {
+		printf("<th>%.*s</th>", tbtlen(header[i], strlen(header[i]) - 1), header[i]);
+	}
+	printf("</thead>");
+	printf("<tbody>");
+	while (fgets(line, LINESIZE, file)) {
+		if (started)
+			printf("</tr>");
+		printf("<tr>");
+		for (int i=0; i<COLUMNS; i++) {
+			char* column = line + starts[i];
+			char* headerColumn = header[i];
+			columnSpace = strlen(headerColumn) - 1;
+			if (strncmp(column, "https:", 5))
+				printf("<td>%.*s</td>", tbtlen(column, columnSpace), column);
+			else {
+				int len = tbtlen(column, columnSpace);
+				printf("<td class=url><a href=\"%.*s\">%.*s</a></td>", len, column, len, column);
+			}
+		}
+		started = 1;
+		printf("</tr>");
+	}
+	printf("</tbody>");
+}
+
 // given an open file, dump json to stdout
 // usage example: ./tbl table.txt | jq '.[] | .title'
 void presentJson(FILE *file) {
@@ -105,7 +139,8 @@ int main(int argc, char *argv[]) {
         printf("EOPEN\n");
         return 1;
     }
-    presentJson(file);
+    presentHtml(file);
+    // presentJson(file);
     fclose(file);
     return 0;
 }
