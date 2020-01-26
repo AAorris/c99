@@ -2,7 +2,7 @@
 
 ## TBL : Tablatal Utility
 
-Tablatal utility. Currently parses an example tablatal file and outputs JSON.
+Tablatal utility. Currently parses an example tablatal file and outputs SQL.
 
 ### Quick Start
 
